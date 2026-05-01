@@ -27,32 +27,18 @@ Cada pasta representa um módulo da pós-graduação e contém:
 ### 📌 Módulos
 
 - **Módulo 01 – Imersão em Pyhton**
-  - Estatística descritiva
-  - Medidas de tendência central e dispersão
 
 - **Módulo 02 – Introdução a análise de dados**
-  - Conceitos fundamentais
-  - Distribuições de probabilidade
 
 - **Módulo 03 – Estatísticas 01**
-  - Manipulação de dados com Pandas
-  - Operações com NumPy
 
 - **Módulo 04 –  Estatísticas 02**
-  - Visualização de dados
-  - Extração de insights
- 
+
 - **Módulo 05 –  Análise e visualização de dados**
-  - Visualização de dados
-  - Extração de insights
- 
+
 - **Módulo 06 –  Modelos Descritivos**
-  - Visualização de dados
-  - Extração de insights
 
 - **Módulo 07 –  Modelos Preditivo**
-  - Visualização de dados
-  - Extração de insights 
 
 *(Os módulos serão atualizados conforme o avanço do curso.)*
 
