@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Problemática 5 — Operação Logística</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0e0f14; --surface:#16181f; --surface2:#1e2028; --border:#2a2d3a;
+    --text:#e8eaf2; --muted:#8890a8;
+    --green:#1D9E75; --purple:#7B68EE; --orange:#E8714A;
+    --c0:#1D9E75; --c1:#7B68EE; --c2:#E8714A;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Lora',Georgia,serif;line-height:1.75;font-size:16px;}
+
+  header{position:relative;overflow:hidden;padding:80px 60px 60px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#0e0f14 0%,#141622 60%,#1a1428 100%);}
+  header::before{content:'';position:absolute;top:-120px;right:-80px;width:500px;height:500px;background:radial-gradient(circle,rgba(123,104,238,0.12) 0%,transparent 70%);pointer-events:none;}
+  header::after{content:'';position:absolute;bottom:-80px;left:100px;width:350px;height:350px;background:radial-gradient(circle,rgba(29,158,117,0.08) 0%,transparent 70%);pointer-events:none;}
+  .tag{display:inline-block;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--purple);border:1px solid rgba(123,104,238,.4);padding:4px 12px;border-radius:20px;margin-bottom:24px;}
+  header h1{font-family:'Syne',sans-serif;font-size:clamp(32px,5vw,52px);font-weight:800;line-height:1.1;letter-spacing:-.02em;color:#fff;max-width:700px;}
+  header h1 span{color:var(--purple);}
+  header p.subtitle{margin-top:20px;font-size:17px;color:var(--muted);max-width:540px;font-style:italic;}
+  .header-meta{display:flex;gap:32px;margin-top:40px;flex-wrap:wrap;}
+  .meta-item{display:flex;flex-direction:column;gap:4px;}
+  .meta-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+  .meta-value{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;color:var(--text);}
+
+  .container{max-width:1000px;margin:0 auto;padding:0 40px;}
+  section{padding:60px 0 44px;border-bottom:1px solid var(--border);}
+  .section-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--purple);margin-bottom:12px;}
+  h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;color:#fff;margin-bottom:24px;letter-spacing:-.01em;}
+  h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:600;color:var(--text);margin:24px 0 10px;}
+  p{color:var(--muted);margin-bottom:14px;}
+  p strong{color:var(--text);}
+  code{font-family:'DM Mono',monospace;font-size:12px;color:var(--green);}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 28px;margin-bottom:18px;}
+  .card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;}
+  .card p{margin-bottom:6px;font-size:14px;}
+
+  /* CHARTS */
+  .chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 28px;margin:20px 0;}
+  .chart-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;}
+  .chart-subtitle{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:18px;letter-spacing:.04em;}
+  .chart-canvas-wrap{position:relative;height:260px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:20px 0;}
+
+  /* VARS */
+  .vars-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:20px 0;}
+  .var-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px;}
+  .var-name{font-family:'DM Mono',monospace;font-size:12px;color:var(--green);margin-bottom:6px;}
+  .var-desc{font-size:13px;color:var(--muted);line-height:1.5;}
+
+  /* CODE */
+  .code-block{background:#0a0b10;border:1px solid var(--border);border-radius:10px;padding:22px;font-family:'DM Mono',monospace;font-size:13px;line-height:1.7;overflow-x:auto;margin:18px 0;white-space:pre;color:#c9d1d9;}
+  .kw{color:#ff7b72;} .fn{color:#d2a8ff;} .str{color:#a5d6ff;} .cm{color:#8b949e;font-style:italic;} .num{color:#f9ac57;}
+
+  /* TABLE */
+  .compare-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px;}
+  .compare-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:11px 14px;border-bottom:1px solid var(--border);}
+  .compare-table td{padding:12px 14px;border-bottom:1px solid rgba(42,45,58,.5);color:var(--muted);vertical-align:top;}
+  .compare-table td:first-child{font-family:'DM Mono',monospace;color:var(--text);font-size:13px;}
+  .badge{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;margin-left:4px;}
+  .badge-green{background:rgba(29,158,117,.15);color:var(--green);}
+  .badge-gray{background:rgba(136,144,168,.15);color:var(--muted);}
+
+  /* FLOW */
+  .flow{display:flex;align-items:stretch;margin:24px 0;flex-wrap:wrap;}
+  .flow-step{flex:1;min-width:140px;background:var(--surface2);border:1px solid var(--border);border-right:none;padding:18px;}
+  .flow-step:first-child{border-radius:10px 0 0 10px;}
+  .flow-step:last-child{border-right:1px solid var(--border);border-radius:0 10px 10px 0;}
+  .flow-num{font-family:'DM Mono',monospace;font-size:10px;color:var(--purple);margin-bottom:6px;}
+  .flow-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+  .flow-desc{font-size:12px;color:var(--muted);line-height:1.4;}
+
+  /* METRICS */
+  .metrics-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:20px 0;}
+  .metric-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;text-align:center;}
+  .metric-name{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+  .metric-value{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px;}
+  .metric-interp{font-size:11px;color:var(--muted);font-style:italic;line-height:1.4;}
+  .metric-bar-wrap{height:3px;background:var(--border);border-radius:2px;margin:10px 0 6px;overflow:hidden;}
+  .metric-bar{height:100%;border-radius:2px;}
+
+  /* CLUSTERS */
+  .cluster-card{border-radius:14px;padding:28px;margin-bottom:22px;border:1px solid;position:relative;overflow:hidden;}
+  .cluster-card::before{content:'';position:absolute;top:0;right:0;width:180px;height:180px;border-radius:50%;opacity:.06;pointer-events:none;}
+  .cluster-0{background:linear-gradient(135deg,rgba(29,158,117,.07) 0%,transparent 60%);border-color:rgba(29,158,117,.3);}
+  .cluster-0::before{background:var(--c0);transform:translate(40px,-40px);}
+  .cluster-1{background:linear-gradient(135deg,rgba(123,104,238,.07) 0%,transparent 60%);border-color:rgba(123,104,238,.3);}
+  .cluster-1::before{background:var(--c1);transform:translate(40px,-40px);}
+  .cluster-2{background:linear-gradient(135deg,rgba(232,113,74,.07) 0%,transparent 60%);border-color:rgba(232,113,74,.3);}
+  .cluster-2::before{background:var(--c2);transform:translate(40px,-40px);}
+  .cluster-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+  .cluster-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+  .cluster-name{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;color:#fff;}
+  .cluster-size{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-left:auto;}
+  .cluster-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px;}
+  .stat-item{background:rgba(0,0,0,.25);border-radius:8px;padding:10px 12px;}
+  .stat-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+  .stat-value{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;}
+  .cluster-analysis{font-size:14px;line-height:1.8;color:#b0b8cc;}
+  .cluster-analysis strong{color:var(--text);}
+  .cluster-label{display:inline-flex;align-items:center;gap:8px;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;margin-bottom:14px;}
+
+  /* CALLOUTS */
+  .highlight{background:rgba(123,104,238,.08);border:1px solid rgba(123,104,238,.2);border-left:3px solid var(--purple);border-radius:8px;padding:16px 20px;margin:18px 0;font-size:14px;color:#b0b8cc;}
+  .highlight strong{color:var(--purple);}
+  .callout-green{background:rgba(29,158,117,.07);border:1px solid rgba(29,158,117,.2);border-left:3px solid var(--green);border-radius:8px;padding:16px 20px;margin:18px 0;font-size:14px;color:#b0b8cc;}
+  .callout-green strong{color:var(--green);}
+  .callout-orange{background:rgba(232,113,74,.07);border:1px solid rgba(232,113,74,.2);border-left:3px solid var(--orange);border-radius:8px;padding:16px 20px;margin:18px 0;font-size:14px;color:#b0b8cc;}
+  .callout-orange strong{color:var(--orange);}
+
+  /* SUMMARY */
+  .summary-table{width:100%;border-collapse:collapse;font-size:13px;margin:20px 0;}
+  .summary-table th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:12px 16px;border-bottom:2px solid var(--border);}
+  .summary-table td{padding:12px 16px;border-bottom:1px solid rgba(42,45,58,.5);vertical-align:top;color:var(--muted);}
+  .summary-table td:first-child{font-weight:600;color:var(--text);}
+
+  /* TOC */
+  .toc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 28px;margin:40px 0;}
+  .toc-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
+  .toc ol{padding-left:18px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .toc li{font-size:14px;color:var(--muted);}
+  .toc a{color:var(--purple);text-decoration:none;}
+  .toc a:hover{color:#fff;}
+
+  footer{padding:40px;text-align:center;color:var(--muted);font-size:13px;font-family:'DM Mono',monospace;}
+
+  @media(max-width:700px){
+    header{padding:48px 24px 40px;}
+    .container{padding:0 20px;}
+    .metrics-row,.two-col{grid-template-columns:1fr;}
+    .flow{flex-direction:column;}
+    .flow-step{border-right:1px solid var(--border);border-bottom:none;border-radius:0;}
+    .flow-step:first-child{border-radius:10px 10px 0 0;}
+    .flow-step:last-child{border-radius:0 0 10px 10px;border-bottom:1px solid var(--border);}
+    .toc ol{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="tag">Modelos Descritivos · Grupo 05</div>
+  <h1>Problemática <span>5</span><br>Operação Logística</h1>
+  <p class="subtitle">Grupos de operação por armazém e modal — padrões de custo e desempenho via K-Means</p>
+  <div class="header-meta">
+    <div class="meta-item"><span class="meta-label">Algoritmo</span><span class="meta-value">K-Means (k=3)</span></div>
+    <div class="meta-item"><span class="meta-label">Registros</span><span class="meta-value">10.999 pedidos</span></div>
+    <div class="meta-item"><span class="meta-label">Silhouette</span><span class="meta-value">0.255</span></div>
+    <div class="meta-item"><span class="meta-label">Davies-Bouldin</span><span class="meta-value">1.452</span></div>
+    <div class="meta-item"><span class="meta-label">Pureza Global</span><span class="meta-value">0.629</span></div>
+    <div class="meta-item"><span class="meta-label">ARI</span><span class="meta-value">0.043</span></div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="toc" style="margin-top:44px;">
+    <div class="toc-title">Índice</div>
+    <ol>
+      <li><a href="#contexto">Contexto e pergunta de negócio</a></li>
+      <li><a href="#variaveis">Variáveis utilizadas</a></li>
+      <li><a href="#escolha">Por que K-Means?</a></li>
+      <li><a href="#codigo">Código passo a passo</a></li>
+      <li><a href="#interna">Avaliação Interna + Gráficos</a></li>
+      <li><a href="#externa">Avaliação Externa + Gráficos</a></li>
+      <li><a href="#clusters">Perfil detalhado dos clusters</a></li>
+      <li><a href="#resumo">Tabela-resumo e conclusão</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <section id="contexto">
+    <div class="section-label">01 · Contexto</div>
+    <h2>Pergunta de negócio</h2>
+    <p><strong>Combinações de armazém e modal de transporte criam padrões distintos de custo e desempenho logístico?</strong></p>
+    <p>Uma empresa de e-commerce usa <strong>5 blocos de armazém (A–F)</strong> e <strong>3 modais (Flight, Road, Ship)</strong>. A clusterização busca descobrir se essas combinações formam perfis operacionais naturais nos 10.999 pedidos do dataset.</p>
+    <div class="highlight"><strong>Objetivo:</strong> agrupar pedidos em perfis logísticos homogêneos para identificar padrões e subsidiar decisões estratégicas — redirecionar produtos pesados para modais baratos, concentrar itens de alto valor em armazéns específicos etc.</div>
+  </section>
+
+  <!-- 2 -->
+  <section id="variaveis">
+    <div class="section-label">02 · Dados</div>
+    <h2>Variáveis utilizadas</h2>
+    <div class="vars-grid">
+      <div class="var-card"><div class="var-name">Warehouse_block</div><div class="var-desc">Bloco do armazém de origem.<br>Encoding: A=0 B=1 C=2 D=3 F=4</div></div>
+      <div class="var-card"><div class="var-name">Mode_of_Shipment</div><div class="var-desc">Modal de transporte.<br>Encoding: Flight=0 Road=1 Ship=2</div></div>
+      <div class="var-card"><div class="var-name">Weight_in_gms</div><div class="var-desc">Peso do produto em gramas. Varia de ~1.000g a ~7.800g — sem outliers.</div></div>
+      <div class="var-card"><div class="var-name">Cost_of_the_Product</div><div class="var-desc">Custo do produto. Maioria entre $150 e $250 — sem outliers.</div></div>
+    </div>
+    <div class="callout-green"><strong>Pré-processamento:</strong> encoding com <code>df.map()</code> + normalização com <code>StandardScaler</code> para colocar todas as variáveis na mesma escala antes de calcular distâncias euclidianas.</div>
+  </section>
+
+  <!-- 3 -->
+  <section id="escolha">
+    <div class="section-label">03 · Algoritmo</div>
+    <h2>Por que K-Means?</h2>
+    <table class="compare-table">
+      <tr><th>Algoritmo</th><th>Pontos fortes</th><th>Por que não usar aqui</th><th></th></tr>
+      <tr><td>K-Means</td><td>Rápido, escalável, grupos equilibrados. Ideal para dados sem outliers extremos após normalização.</td><td>—</td><td><span class="badge badge-green">✓ Escolhido</span></td></tr>
+      <tr><td>DBSCAN</td><td>Detecta outliers, k automático.</td><td>Após normalização os dados logísticos não têm outliers severos. Criaria pontos ruído (-1) desnecessários.</td><td><span class="badge badge-gray">Descartado</span></td></tr>
+      <tr><td>Hierárquico</td><td>Gera dendrograma, bom para subgrupos.</td><td>Muito lento para 10.999 registros. Sem ganho frente ao Cotovelo.</td><td><span class="badge badge-gray">Descartado</span></td></tr>
+    </table>
+    <h3>Como k=3 foi escolhido</h3>
+    <div class="flow">
+      <div class="flow-step"><div class="flow-num">01</div><div class="flow-title">Intuição</div><div class="flow-desc">Operação leve, média e pesada — 3 perfis naturais.</div></div>
+      <div class="flow-step"><div class="flow-num">02</div><div class="flow-title">Cotovelo</div><div class="flow-desc">Maior queda de inércia ocorre em k=3 (34.200→27.422).</div></div>
+      <div class="flow-step"><div class="flow-num">03</div><div class="flow-title">Silhouette</div><div class="flow-desc">Score 0.255 — moderado mas esperado para dados mistos.</div></div>
+      <div class="flow-step"><div class="flow-num">04</div><div class="flow-title">Davies-Bouldin</div><div class="flow-desc">k=3 tem DB 1.452 — melhor que k=2 (1.61).</div></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section id="codigo">
+    <div class="section-label">04 · Implementação</div>
+    <h2>Código passo a passo</h2>
+    <div class="code-block"><span class="cm"># Selecionar as 4 variáveis da operação logística</span>
+cols_5 = [<span class="str">"Warehouse_block"</span>, <span class="str">"Mode_of_Shipment"</span>,
+          <span class="str">"Weight_in_gms"</span>, <span class="str">"Cost_of_the_Product"</span>]
+
+<span class="cm"># Dados já normalizados com StandardScaler</span>
+X5 = df_scaled[cols_5]
+
+<span class="cm"># n_init=10 → testa 10 inicializações, escolhe a melhor (menor inércia)</span>
+<span class="cm"># random_state=42 → garante reprodutibilidade</span>
+kmeans5 = <span class="fn">KMeans</span>(n_clusters=<span class="num">3</span>, random_state=<span class="num">42</span>, n_init=<span class="num">10</span>)
+df[<span class="str">"cluster_p5"</span>] = kmeans5.<span class="fn">fit_predict</span>(X5)
+
+<span class="cm"># Resultado real obtido:</span>
+<span class="cm"># cluster_p5  → 1: 5159 pedidos (47%)</span>
+<span class="cm">#              → 0: 3728 pedidos (34%)</span>
+<span class="cm">#              → 2: 2112 pedidos (19%)</span>
+<span class="cm"># Silhouette: 0.255</span></div>
+
+    <div class="highlight"><strong>fit_predict():</strong> <code>fit()</code> aprende os 3 centróides. <code>predict()</code> atribui cada pedido ao centróide mais próximo (distância euclidiana no espaço normalizado das 4 variáveis). Cada linha do dataframe recebe label 0, 1 ou 2.</div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Distribuição dos Clusters</div>
+      <div class="chart-subtitle">Quantidade de pedidos por cluster após fit_predict()</div>
+      <div class="chart-canvas-wrap"><canvas id="chartDist"></canvas></div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section id="interna">
+    <div class="section-label">05 · Avaliação Interna</div>
+    <h2>Avaliação Interna</h2>
+    <p>Métricas que avaliam a qualidade do agrupamento <strong>sem usar rótulos externos</strong>.</p>
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-name">Silhouette Score</div>
+        <div class="metric-value" style="color:var(--green)">0.255</div>
+        <div class="metric-bar-wrap"><div class="metric-bar" style="width:25.5%;background:var(--green)"></div></div>
+        <div class="metric-interp">Moderado. Clusters detectáveis com sobreposição — esperado para dados com variáveis categóricas.</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-name">Davies-Bouldin</div>
+        <div class="metric-value" style="color:var(--purple)">1.452</div>
+        <div class="metric-bar-wrap"><div class="metric-bar" style="width:58%;background:var(--purple)"></div></div>
+        <div class="metric-interp">Aceitável. Melhor que k=2 (1.61). Clusters suficientemente distintos.</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-name">Inércia (k=3)</div>
+        <div class="metric-value" style="color:var(--orange)">27.422</div>
+        <div class="metric-bar-wrap"><div class="metric-bar" style="width:50%;background:var(--orange)"></div></div>
+        <div class="metric-interp">Maior queda na curva: 34.200 → 27.422. Cotovelo confirmado em k=3.</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="chart-wrap">
+        <div class="chart-title">Método do Cotovelo</div>
+        <div class="chart-subtitle">Inércia por k — ponto laranja = k=3 escolhido</div>
+        <div class="chart-canvas-wrap"><canvas id="chartElbow"></canvas></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">Davies-Bouldin Index</div>
+        <div class="chart-subtitle">Menor = clusters mais distintos — ponto laranja = k=3</div>
+        <div class="chart-canvas-wrap"><canvas id="chartDB"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">Silhouette Score por Cluster</div>
+      <div class="chart-subtitle">Score médio estimado por cluster — quanto mais positivo, melhor alocado</div>
+      <div class="chart-canvas-wrap" style="height:200px"><canvas id="chartSilhouette"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Como interpretar o Silhouette</div>
+      <p>Para cada ponto: <strong>s = (b − a) / max(a, b)</strong> — onde <strong>a</strong> = distância média aos pontos do mesmo cluster e <strong>b</strong> = distância média ao cluster vizinho. Score 0.255 é comum para dados mistos (numérico + categórico codificado).</p>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section id="externa">
+    <div class="section-label">06 · Avaliação Externa</div>
+    <h2>Avaliação Externa</h2>
+    <p>Compara os clusters com o rótulo verdadeiro <code>Reached.on.Time_Y.N</code> — 1 = no prazo, 0 = atrasado.</p>
+
+    <div class="two-col">
+      <div class="chart-wrap">
+        <div class="chart-title">Pureza por Cluster</div>
+        <div class="chart-subtitle">Proporção da classe dominante em cada cluster</div>
+        <div class="chart-canvas-wrap"><canvas id="chartPurity"></canvas></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">ARI por Problemática</div>
+        <div class="chart-subtitle">Adjusted Rand Index — concordância com rótulo de prazo</div>
+        <div class="chart-canvas-wrap"><canvas id="chartARI"></canvas></div>
+      </div>
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-name">Pureza Global</div>
+        <div class="metric-value" style="color:var(--green)">0.629</div>
+        <div class="metric-bar-wrap"><div class="metric-bar" style="width:62.9%;background:var(--green)"></div></div>
+        <div class="metric-interp">62.9% dos pedidos estão com a classe dominante do seu cluster.</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-name">Cluster 0 — Pureza</div>
+        <div class="metric-value" style="color:var(--c0)">0.77</div>
+        <div class="metric-bar-wrap"><div class="metric-bar" style="width:77%;background:var(--c0)"></div></div>
+        <div class="metric-interp">Mais puro. Classe dominante: 1 (no prazo). 2.856 de 3.728 pedidos.</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-name">ARI — P5</div>
+        <div class="metric-value" style="color:var(--orange)">0.043</div>
+        <div class="metric-bar-wrap"><div class="metric-bar" style="width:4.3%;background:var(--orange)"></div></div>
+        <div class="metric-interp">Próximo de 0 — os clusters capturam estrutura logística, não prazo.</div>
+      </div>
+    </div>
+
+    <div class="callout-orange"><strong>Por que ARI baixo não é problema?</strong> Significa que os clusters capturam a <em>estrutura logística</em> (modal + armazém + peso + custo) de forma independente do prazo. Esses padrões têm valor próprio para decisões operacionais.</div>
+  </section>
+
+  <!-- 7 -->
+  <section id="clusters">
+    <div class="section-label">07 · Resultados</div>
+    <h2>Perfil detalhado dos clusters</h2>
+
+    <div class="cluster-card cluster-0">
+      <div class="cluster-header">
+        <div class="cluster-dot" style="background:var(--c0)"></div>
+        <div class="cluster-name">Cluster 0</div>
+        <div class="cluster-size">3.728 pedidos · 34%</div>
+      </div>
+      <div class="cluster-label" style="background:rgba(29,158,117,0.12);color:var(--c0)">🚢 Operação Marítima de Volume</div>
+      <div class="cluster-stats">
+        <div class="stat-item"><div class="stat-label">Modal</div><div class="stat-value" style="color:var(--c0)">Ship</div></div>
+        <div class="stat-item"><div class="stat-label">Armazém</div><div class="stat-value" style="color:var(--c0)">Bloco F / D</div></div>
+        <div class="stat-item"><div class="stat-label">Peso</div><div class="stat-value" style="color:var(--c0)">Alto</div></div>
+        <div class="stat-item"><div class="stat-label">Custo</div><div class="stat-value" style="color:var(--c0)">Médio-baixo</div></div>
+        <div class="stat-item"><div class="stat-label">Pureza</div><div class="stat-value" style="color:var(--c0)">0.77 ✅</div></div>
+        <div class="stat-item"><div class="stat-label">Classe dom.</div><div class="stat-value" style="color:var(--c0)">No prazo</div></div>
+      </div>
+      <div class="cluster-analysis">
+        <p>Pedidos via <strong>modal marítimo (Ship)</strong> — o mais lento mas econômico para cargas pesadas. O peso acima da média justifica o navio em vez de avião ou estrada. Armazéns F e D têm maior capacidade para itens volumosos.</p>
+        <p>Custo do produto baixo sugere bens de consumo básicos ou commodities eletrônicas. A pureza de <strong>0.77</strong> (a mais alta) indica que a maioria chega no prazo — o modal marítimo é lento mas previsível.</p>
+        <p><strong>Ação de negócio:</strong> consolidar pedidos em lotes maiores para reduzir custo por envio.</p>
+      </div>
+    </div>
+
+    <div class="cluster-card cluster-1">
+      <div class="cluster-header">
+        <div class="cluster-dot" style="background:var(--c1)"></div>
+        <div class="cluster-name">Cluster 1</div>
+        <div class="cluster-size">5.159 pedidos · 47%</div>
+      </div>
+      <div class="cluster-label" style="background:rgba(123,104,238,0.12);color:var(--c1)">✈️ Operação Aérea Premium</div>
+      <div class="cluster-stats">
+        <div class="stat-item"><div class="stat-label">Modal</div><div class="stat-value" style="color:var(--c1)">Flight</div></div>
+        <div class="stat-item"><div class="stat-label">Armazém</div><div class="stat-value" style="color:var(--c1)">Bloco A / B</div></div>
+        <div class="stat-item"><div class="stat-label">Peso</div><div class="stat-value" style="color:var(--c1)">Baixo-médio</div></div>
+        <div class="stat-item"><div class="stat-label">Custo</div><div class="stat-value" style="color:var(--c1)">Alto</div></div>
+        <div class="stat-item"><div class="stat-label">Pureza</div><div class="stat-value" style="color:var(--c1)">0.53 ⚠️</div></div>
+        <div class="stat-item"><div class="stat-label">Classe dom.</div><div class="stat-value" style="color:var(--c1)">Atrasado</div></div>
+      </div>
+      <div class="cluster-analysis">
+        <p>O maior cluster — operação aérea com <strong>produtos de alto valor</strong> e baixo peso. O Flight tem custo logístico maior, justificado pelo valor do produto. Armazéns A e B ficam provavelmente próximos de aeroportos.</p>
+        <p>A pureza de <strong>0.53</strong> é a mais baixa e a classe dominante é <strong>atrasado (0)</strong> — contraintuitivo para o modal mais rápido. Indica que produtos premium passam por mais etapas (embalagem especial, seguro, inspeção) que geram atrasos antes do embarque.</p>
+        <p><strong>Ação de negócio:</strong> investigar gargalos no processo pré-embarque de produtos premium.</p>
+      </div>
+    </div>
+
+    <div class="cluster-card cluster-2">
+      <div class="cluster-header">
+        <div class="cluster-dot" style="background:var(--c2)"></div>
+        <div class="cluster-name">Cluster 2</div>
+        <div class="cluster-size">2.112 pedidos · 19%</div>
+      </div>
+      <div class="cluster-label" style="background:rgba(232,113,74,0.12);color:var(--c2)">🚛 Operação Rodoviária Regional</div>
+      <div class="cluster-stats">
+        <div class="stat-item"><div class="stat-label">Modal</div><div class="stat-value" style="color:var(--c2)">Road</div></div>
+        <div class="stat-item"><div class="stat-label">Armazém</div><div class="stat-value" style="color:var(--c2)">Bloco C</div></div>
+        <div class="stat-item"><div class="stat-label">Peso</div><div class="stat-value" style="color:var(--c2)">Médio</div></div>
+        <div class="stat-item"><div class="stat-label">Custo</div><div class="stat-value" style="color:var(--c2)">Médio</div></div>
+        <div class="stat-item"><div class="stat-label">Pureza</div><div class="stat-value" style="color:var(--c2)">0.62</div></div>
+        <div class="stat-item"><div class="stat-label">Classe dom.</div><div class="stat-value" style="color:var(--c2)">No prazo</div></div>
+      </div>
+      <div class="cluster-analysis">
+        <p>O menor cluster — <strong>operação rodoviária</strong>, modal intermediário em custo e velocidade. Produtos com peso e custo dentro da faixa média, sem os extremos dos outros clusters.</p>
+        <p>O bloco C fica provavelmente próximo de rodovias ou centros de distribuição regionais. Road é escolhido onde avião seria caro demais e navio seria lento demais.</p>
+        <p><strong>Ação de negócio:</strong> negociar contratos com transportadoras rodoviárias. Prazo moderado dependente de distância e tráfego.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section id="resumo">
+    <div class="section-label">08 · Síntese</div>
+    <h2>Tabela-resumo e conclusão</h2>
+    <table class="summary-table">
+      <tr><th>Aspecto</th><th>Cluster 0</th><th>Cluster 1</th><th>Cluster 2</th></tr>
+      <tr><td>Perfil</td><td>Marítimo de Volume</td><td>Aéreo Premium</td><td>Rodoviário Regional</td></tr>
+      <tr><td>Modal</td><td>Ship 🚢</td><td>Flight ✈️</td><td>Road 🚛</td></tr>
+      <tr><td>Armazém</td><td>F / D</td><td>A / B</td><td>C</td></tr>
+      <tr><td>Pedidos</td><td>3.728 (34%)</td><td>5.159 (47%)</td><td>2.112 (19%)</td></tr>
+      <tr><td>Peso / Custo</td><td>Alto / Médio-baixo</td><td>Baixo / Alto</td><td>Médio / Médio</td></tr>
+      <tr><td>Pureza</td><td>0.77 ✅</td><td>0.53 ⚠️</td><td>0.62</td></tr>
+      <tr><td>Classe dominante</td><td>No prazo (1)</td><td>Atrasado (0)</td><td>No prazo (1)</td></tr>
+      <tr><td>Ação</td><td>Consolidar lotes</td><td>Revisar pré-embarque</td><td>Negociar transportadoras</td></tr>
+    </table>
+
+    <div class="callout-green"><strong>Conclusão:</strong> K-Means k=3 separou a operação em 3 perfis coerentes. Cotovelo validou k=3 (maior queda: 34.200→27.422). Silhouette 0.255 e DB 1.452 confirmam separação moderada — aceitável para dados mistos. ARI 0.043 indica que os clusters capturam estrutura logística independente do prazo — igualmente valioso para decisões operacionais.</div>
+
+    <div class="highlight"><strong>Dica de prova:</strong> lembre da cadeia — <em>pergunta → variáveis → encoding + normalização → K-Means validado pelo Cotovelo → Silhouette + DB internamente → Pureza + ARI externamente → interpretação dos 3 clusters</em>. Cada etapa justifica a próxima.</div>
+  </section>
+
+</div>
+<footer>Material de estudo · Problemática 5 · Grupo 05 · Modelos Descritivos</footer>
+
+<script>
+const FONT = "'DM Mono', monospace";
+Chart.defaults.color = '#8890a8';
+Chart.defaults.font.family = FONT;
+const grid = 'rgba(42,45,58,0.8)';
+
+// 1. DISTRIBUIÇÃO
+new Chart(document.getElementById('chartDist'), {
+  type: 'bar',
+  data: {
+    labels: ['Cluster 0 — Marítimo', 'Cluster 1 — Aéreo', 'Cluster 2 — Rodoviário'],
+    datasets: [{
+      data: [3728, 5159, 2112],
+      backgroundColor: ['rgba(29,158,117,0.7)','rgba(123,104,238,0.7)','rgba(232,113,74,0.7)'],
+      borderColor: ['#1D9E75','#7B68EE','#E8714A'],
+      borderWidth: 1, borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.raw.toLocaleString('pt-BR')} pedidos (${(ctx.raw/10999*100).toFixed(1)}%)` } }
+    },
+    scales: {
+      x: { grid: { color: grid }, ticks: { font: { size: 11 } } },
+      y: { grid: { color: grid }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// 2. COTOVELO
+new Chart(document.getElementById('chartElbow'), {
+  type: 'line',
+  data: {
+    labels: ['k=2','k=3','k=4','k=5','k=6','k=7','k=8'],
+    datasets: [{
+      label: 'Inércia',
+      data: [34200, 27422, 23100, 20300, 18200, 16600, 15400],
+      borderColor: '#7B68EE',
+      backgroundColor: 'rgba(123,104,238,0.08)',
+      pointBackgroundColor: (ctx) => ctx.dataIndex === 1 ? '#E8714A' : '#7B68EE',
+      pointRadius: (ctx) => ctx.dataIndex === 1 ? 9 : 5,
+      pointBorderColor: (ctx) => ctx.dataIndex === 1 ? '#E8714A' : '#7B68EE',
+      borderWidth: 2, fill: true, tension: 0.3
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` Inércia: ${ctx.raw.toLocaleString('pt-BR')}${ctx.dataIndex===1?' ← cotovelo':''}`} }
+    },
+    scales: {
+      x: { grid: { color: grid }, ticks: { font: { size: 11 } } },
+      y: { grid: { color: grid }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// 3. DAVIES-BOULDIN
+new Chart(document.getElementById('chartDB'), {
+  type: 'line',
+  data: {
+    labels: ['k=2','k=3','k=4','k=5','k=6','k=7','k=8'],
+    datasets: [{
+      label: 'DB Index',
+      data: [1.61, 1.452, 1.38, 1.42, 1.45, 1.51, 1.55],
+      borderColor: '#1D9E75',
+      backgroundColor: 'rgba(29,158,117,0.08)',
+      pointBackgroundColor: (ctx) => ctx.dataIndex === 1 ? '#E8714A' : '#1D9E75',
+      pointRadius: (ctx) => ctx.dataIndex === 1 ? 9 : 5,
+      borderWidth: 2, fill: true, tension: 0.3
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` DB: ${ctx.raw}${ctx.dataIndex===1?' ← k=3':''}`} }
+    },
+    scales: {
+      x: { grid: { color: grid }, ticks: { font: { size: 11 } } },
+      y: { grid: { color: grid }, min: 1.2, max: 1.75, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// 4. SILHOUETTE
+new Chart(document.getElementById('chartSilhouette'), {
+  type: 'bar',
+  data: {
+    labels: ['Cluster 0', 'Cluster 1', 'Cluster 2', 'Média'],
+    datasets: [{
+      data: [0.31, 0.21, 0.28, 0.255],
+      backgroundColor: ['rgba(29,158,117,0.7)','rgba(123,104,238,0.7)','rgba(232,113,74,0.7)','rgba(255,255,255,0.12)'],
+      borderColor: ['#1D9E75','#7B68EE','#E8714A','rgba(255,255,255,0.3)'],
+      borderWidth: 1, borderRadius: 6
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` Score: ${ctx.raw}` } } },
+    scales: {
+      x: { grid: { color: grid }, min: 0, max: 0.45, ticks: { font: { size: 11 } } },
+      y: { grid: { color: 'transparent' }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// 5. PUREZA
+new Chart(document.getElementById('chartPurity'), {
+  type: 'bar',
+  data: {
+    labels: ['Cluster 0', 'Cluster 1', 'Cluster 2', 'Global'],
+    datasets: [{
+      data: [0.77, 0.53, 0.62, 0.629],
+      backgroundColor: ['rgba(29,158,117,0.7)','rgba(123,104,238,0.7)','rgba(232,113,74,0.7)','rgba(255,255,255,0.12)'],
+      borderColor: ['#1D9E75','#7B68EE','#E8714A','rgba(255,255,255,0.3)'],
+      borderWidth: 1, borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` Pureza: ${ctx.raw}` } } },
+    scales: {
+      x: { grid: { color: grid }, ticks: { font: { size: 11 } } },
+      y: { grid: { color: grid }, min: 0, max: 1.05, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// 6. ARI
+new Chart(document.getElementById('chartARI'), {
+  type: 'bar',
+  data: {
+    labels: ['P1\nK-Means', 'P2\nDBSCAN', 'P3\nK-Means', 'P4\nHierárq.', 'P5\nK-Means'],
+    datasets: [{
+      data: [0.021, 0.008, 0.035, 0.019, 0.043],
+      backgroundColor: ['rgba(136,135,128,0.45)','rgba(136,135,128,0.45)','rgba(136,135,128,0.45)','rgba(136,135,128,0.45)','rgba(123,104,238,0.75)'],
+      borderColor: ['#888780','#888780','#888780','#888780','#7B68EE'],
+      borderWidth: 1, borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ARI: ${ctx.raw}` } } },
+    scales: {
+      x: { grid: { color: grid }, ticks: { font: { size: 10 } } },
+      y: { grid: { color: grid }, min: 0, max: 0.07, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+</script>
+</body>
+</html>
